@@ -1,21 +1,27 @@
 # Verwende das offizielle Python-Basisimage
 FROM python:3.9
 
-# Setze das Arbeitsverzeichnis im Container
+COPY . /app
 WORKDIR /app
 
-# Kopiere die Skriptdatei in das Arbeitsverzeichnis
-COPY mein_skript.py /app
+RUN mkdir __logger
 
-# Installiere die erforderlichen Abhängigkeiten
-RUN pip install selenium requests
+# install google chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+RUN apt-get -y update
+RUN apt-get install -y google-chrome-stable
 
-# Installiere den Chrome Webdriver im Container
-# Füge die entsprechenden Schritte hinzu, abhängig von deinem Betriebssystem und der Chrome-Version
-# Beispiel für den Chrome Webdriver unter Linux:
-COPY chromedriver_linux64.zip /app
-RUN apt-get update && apt-get install -y unzip && unzip chromedriver_linux64.zip && rm chromedriver_linux64.zip && mv chromedriver /usr/local/bin/chromedriver
+# install chromedriver
+RUN apt-get install -yqq unzip
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
+RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
-# Führe das Skript aus, wenn der Container gestartet wird
-CMD ["python", "script.py"]
+# set display port to avoid crash
+ENV DISPLAY=:99
 
+RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+
+CMD ["python", "./script.py"]

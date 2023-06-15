@@ -17,12 +17,17 @@ username = config["USERNAME"]
 password = config["PASSWORD"]
 # URL der Website, auf der du dich einloggen möchtest
 login_url = config["LOGIN_URL"]
+noti_url = config["NOTI_URL"]
 
 
 def job(previous_dataa):
     # Initialisierung des Webtreibers (Chrome)
     chrome_options = Options()
     chrome_options.headless = True  # Deaktiviert den Headless Mode
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.experimental_options["prefs"] = chrome_prefs = {}
+    chrome_prefs["profile.default_content_settings"] = {"images": 2}
     driver = webdriver.Chrome(options=chrome_options)
 
     # Öffnen der Login-Seite
@@ -93,7 +98,9 @@ def job(previous_dataa):
         for i in range(min_length):
             if data[i] != previous_data[i]:
                 # send request to server with data
-                url = "https://maker.ifttt.com/trigger/nesaTrigger/with/key/ib7VxxFor2mBKWgmV4I3iufc2ZNBhScuClI2psXkhT9"
+                
+                
+                url = noti_url
 
                 payload = json.dumps(
                     {
@@ -105,16 +112,18 @@ def job(previous_dataa):
 
                 print(payload)
 
-                response = requests.request("POST", url, headers=headers, data=payload)
+                if url is not None:
+                    response = requests.request("POST", url, headers=headers, data=payload)
 
-                if response.status_code == 200:
-                    print("Webanfrage erfolgreich durchgeführt.")
-                else:
-                    print("Fehler bei der Webanfrage:", response.status_code)
+                    if response.status_code == 200:
+                        print("Webanfrage erfolgreich durchgeführt.")
+                    else:
+                        print("Fehler bei der Webanfrage:", response.status_code)
 
         if len(data) > len(previous_data):
             for i in range(min_length, len(data)):
-                url = "https://maker.ifttt.com/trigger/nesaTrigger/with/key/ib7VxxFor2mBKWgmV4I3iufc2ZNBhScuClI2psXkhT9"
+                
+                url = noti_url
 
                 payload = json.dumps(
                     {
@@ -125,13 +134,13 @@ def job(previous_dataa):
                 headers = {"Content-Type": "application/json"}
 
                 print(payload)
+                if url is not None:
+                    response = requests.request("POST", url, headers=headers, data=payload)
 
-                response = requests.request("POST", url, headers=headers, data=payload)
-
-                if response.status_code == 200:
-                    print("Webanfrage erfolgreich durchgeführt.")
-                else:
-                    print("Fehler bei der Webanfrage:", response.status_code)  
+                    if response.status_code == 200:
+                        print("Webanfrage erfolgreich durchgeführt.")
+                    else:
+                        print("Fehler bei der Webanfrage:", response.status_code)  
     # Schließen des Webtreibers
     driver.quit()
     return data
